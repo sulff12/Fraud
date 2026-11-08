@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Вход{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="page-head" style="margin-bottom:0;">
+    <div>
+      <h2>Вход в Fraud Control Center</h2>
+      <p></p>
+    </div>
+  </div>
+</section>
+
+<section class="card" style="max-width:520px; margin:0 auto;">
+  <h3 style="margin-top:0;">Авторизация</h3>
+  {% if form.errors %}
+    <div class="message error">Неверный логин или пароль.</div>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <div style="margin-bottom:12px;">
+      <label>Логин</label>
+      <input type="text" name="username" autofocus required>
+    </div>
+    <div style="margin-bottom:16px;">
+      <label>Пароль</label>
+      <input type="password" name="password" required>
+    </div>
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+    <button class="btn" type="submit">Войти</button>
+  </form>
+</section>
+{% endblock %}

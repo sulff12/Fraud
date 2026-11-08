@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Алерты{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <h2>Алерты</h2>
+    <p></p>
+  </div>
+</section>
+
+<section class="card">
+  <form method="get" class="filters">
+    <div>
+      <label>Severity</label>
+      <select name="severity">
+        <option value="">Все</option>
+        <option value="high" {% if filters.severity == 'high' %}selected{% endif %}>High</option>
+        <option value="medium" {% if filters.severity == 'medium' %}selected{% endif %}>Medium</option>
+        <option value="low" {% if filters.severity == 'low' %}selected{% endif %}>Low</option>
+      </select>
+    </div>
+    <div>
+      <label>Status</label>
+      <select name="status">
+        <option value="">Все</option>
+        <option value="open" {% if filters.status == 'open' %}selected{% endif %}>Open</option>
+        <option value="reviewing" {% if filters.status == 'reviewing' %}selected{% endif %}>Reviewing</option>
+        <option value="closed" {% if filters.status == 'closed' %}selected{% endif %}>Closed</option>
+      </select>
+    </div>
+    <div class="actions">
+      <button class="btn" type="submit">Фильтр</button>
+      <a class="btn btn-secondary" href="/transactions/alerts/">Сбросить</a>
+    </div>
+  </form>
+  <div class="chips">
+    <span class="chip">Open: {{ totals.open }}</span>
+    <span class="chip">Reviewing: {{ totals.reviewing }}</span>
+    <span class="chip">Closed: {{ totals.closed }}</span>
+  </div>
+
+  <div class="table-wrap" style="margin-top:14px;">
+    <table>
+      <tr><th>ID</th><th>Tx</th><th>Severity</th><th>Status</th><th>Reason</th><th>Date</th></tr>
+      {% for item in page.object_list %}
+      <tr>
+        <td>{{ item.id }}</td>
+        <td>{{ item.transaction_id }}</td>
+        <td><span class="badge {{ item.severity }}">{{ item.severity }}</span></td>
+        <td><span class="badge {{ item.status }}">{{ item.status }}</span></td>
+        <td>{{ item.reason }}</td>
+        <td>{{ item.created_at }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6"><div class="empty">Нет алертов по текущему фильтру.</div></td></tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="pagination">
+    {% if page.has_previous %}
+      <a href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page.previous_page_number }}">← Назад</a>
+    {% endif %}
+    <span>Страница {{ page.number }} из {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}
+      <a href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page.next_page_number }}">Вперёд →</a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

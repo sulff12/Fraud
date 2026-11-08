@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Обучение{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <h2>Обучение моделей</h2>
+    <p></p>
+  </div>
+  <div class="actions">
+    <form method="post" class="inline">
+      {% csrf_token %}
+      <button class="btn" type="submit">Запустить обучение</button>
+    </form>
+  </div>
+</section>
+
+<section class="grid-2">
+  <div class="card">
+    <h3 style="margin-top:0;"></h3>
+    <div class="chips">
+      <span class="chip">stratified split</span>
+      <span class="chip">3 модели</span>
+      <span class="chip">active artifact</span>
+      <span class="chip">metrics history</span>
+    </div>
+    {% if result %}
+      <div class="chips" style="margin-top:14px;">
+        <span class="chip">best: {{ result.best_model_name }}</span>
+        <span class="chip">selection metric: {{ result.selection_metric }}</span>
+        <span class="chip">train rows: {{ result.train_rows }}</span>
+        <span class="chip">test rows: {{ result.test_rows }}</span>
+      </div>
+      <p class="muted" style="margin-top:12px;">Артефакт: {{ result.artifact_path }}</p>
+    {% else %}
+      <div class="empty">После запуска здесь появится лучшая модель и краткий итог.</div>
+    {% endif %}
+  </div>
+
+  <div class="card alt">
+    <h3 style="margin-top:0;">После обучения</h3>
+    <p>Следующий обязательный шаг — <strong>полный скоринг</strong>. Иначе в транзакциях останутся unscored строки, а алерты и кейсы не будут синхронизированы со всей базой.</p>
+    <a class="btn btn-secondary" href="/ml/score/">Перейти к скорингу</a>
+  </div>
+</section>
+
+<section class="card" style="margin-top:16px;">
+  <h3 style="margin-top:0;">Последние метрики</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Model</th><th>Precision</th><th>Recall</th><th>F1</th><th>ROC-AUC</th><th>Train</th><th>Test</th><th>Created</th></tr>
+      {% for item in metrics %}
+      <tr>
+        <td>{{ item.model_name }}</td>
+        <td>{{ item.precision|default:'—' }}</td>
+        <td>{{ item.recall|default:'—' }}</td>
+        <td>{{ item.f1|default:'—' }}</td>
+        <td>{{ item.roc_auc|default:'—' }}</td>
+        <td>{{ item.train_rows }}</td>
+        <td>{{ item.test_rows }}</td>
+        <td>{{ item.created_at }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8"><div class="empty">Метрик пока нет.</div></td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</section>
+{% endblock %}

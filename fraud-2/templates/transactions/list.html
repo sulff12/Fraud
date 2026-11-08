@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Транзакции{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <h2>Транзакции</h2>
+    <p></p>
+  </div>
+</section>
+
+<section class="card">
+  <form method="get" class="filters">
+    <div>
+      <label>Поиск по ID или типу</label>
+      <input type="text" name="q" value="{{ filters.q }}" placeholder="например CASH_OUT или 1452">
+    </div>
+    <div>
+      <label>Risk level</label>
+      <select name="risk">
+        <option value="">Все</option>
+        <option value="high" {% if filters.risk == 'high' %}selected{% endif %}>High</option>
+        <option value="medium" {% if filters.risk == 'medium' %}selected{% endif %}>Medium</option>
+        <option value="low" {% if filters.risk == 'low' %}selected{% endif %}>Low</option>
+        <option value="clear" {% if filters.risk == 'clear' %}selected{% endif %}>Clear</option>
+        <option value="unscored" {% if filters.risk == 'unscored' %}selected{% endif %}>Unscored</option>
+      </select>
+    </div>
+    <div>
+      <label>Scored</label>
+      <select name="scored">
+        <option value="">Все</option>
+        <option value="yes" {% if filters.scored == 'yes' %}selected{% endif %}>Только scored</option>
+        <option value="no" {% if filters.scored == 'no' %}selected{% endif %}>Только unscored</option>
+      </select>
+    </div>
+    <div>
+      <label>Operation type</label>
+      <select name="operation_type">
+        <option value="">Все</option>
+        {% for item in operation_types %}
+          <option value="{{ item }}" {% if filters.operation_type == item %}selected{% endif %}>{{ item }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="actions">
+      <button class="btn" type="submit">Применить</button>
+      <a class="btn btn-secondary" href="/transactions/">Сбросить</a>
+    </div>
+  </form>
+
+  <div class="chips" style="margin-top:16px;">
+    <span class="chip">High: {{ risk_counts.high }}</span>
+    <span class="chip">Medium: {{ risk_counts.medium }}</span>
+    <span class="chip">Low: {{ risk_counts.low }}</span>
+    <span class="chip">Clear: {{ risk_counts.clear }}</span>
+    <span class="chip">Unscored: {{ risk_counts.unscored }}</span>
+    <span class="chip">Всего по фильтру: {{ current_count }}</span>
+  </div>
+  <p class="muted">Пороги риска: low ≥ {{ thresholds.low }}, medium ≥ {{ thresholds.medium }}, high ≥ {{ thresholds.high }}</p>
+
+  <div class="table-wrap" style="margin-top:14px;">
+    <table>
+      <tr><th>ID</th><th>Timestamp</th><th>Type</th><th>Amount</th><th>Label</th><th>Probability</th><th>Risk</th><th>Batch</th></tr>
+      {% for item in page.object_list %}
+      <tr>
+        <td>{{ item.id }}</td>
+        <td>{{ item.timestamp }}</td>
+        <td>{{ item.operation_type }}</td>
+        <td>{{ item.amount }}</td>
+        <td>{{ item.fraud_label }}</td>
+        <td>{{ item.fraud_probability|default:'—' }}</td>
+        <td><span class="badge {{ item.risk_level }}">{{ item.risk_level }}</span></td>
+        <td>{{ item.upload_batch_id|default:'—' }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8"><div class="empty">По текущему фильтру данных нет.</div></td></tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="pagination">
+    {% if page.has_previous %}
+      <a href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page.previous_page_number }}">← Назад</a>
+    {% endif %}
+    <span>Страница {{ page.number }} из {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}
+      <a href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page.next_page_number }}">Вперёд →</a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

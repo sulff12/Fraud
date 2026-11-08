@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Импорт{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <h2>Импорт транзакций</h2>
+    <p></p>
+  </div>
+</section>
+
+<section class="grid-2">
+  <div class="card">
+    <h3 style="margin-top:0;">Импорт через интерфейс</h3>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="upload_csv">
+      {{ form.as_p }}
+      <div class="actions">
+        <button class="btn" type="submit">Импортировать файл</button>
+      </div>
+    </form>
+    <div class="chips">
+      <span class="chip">Поддерживается step или timestamp</span>
+      <span class="chip">Тип операции: type или operation_type</span>
+      <span class="chip">fraud_label или isFraud</span>
+    </div>
+  </div>
+
+  <div class="card alt">
+    <h3 style="margin-top:0;">Встроенный датасет</h3>
+    {% if bundled_dataset_exists %}
+      <p><strong>{{ bundled_dataset_name }}</strong></p>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="import_bundled_dataset">
+        <button class="btn" type="submit">Импортировать PaySim 200k</button>
+      </form>
+      <div class="chips">
+        <span class="chip">200 000 строк</span>
+        <span class="chip">8 213 fraud</span>
+        <span class="chip">Подходит для PostgreSQL и SQLite</span>
+      </div>
+    {% else %}
+      <div class="empty">Встроенный prepared CSV не найден.</div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="card" style="margin-top:16px;">
+  <div class="split">
+    <div>
+      <h3 style="margin:0;">Команда для консоли</h3>
+      <p class="muted" style="margin:6px 0 0;"></p>
+    </div>
+  </div>
+  <pre class="command"></pre>
+</section>
+
+<section class="card" style="margin-top:16px;">
+  <h3 style="margin-top:0;">Последние загрузки</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>ID</th><th>Файл</th><th>Строк</th><th>Пользователь</th><th>Дата</th></tr>
+      {% for item in recent_batches %}
+      <tr>
+        <td>{{ item.id }}</td>
+        <td>{{ item.original_filename }}</td>
+        <td>{{ item.rows_imported }}</td>
+        <td>{{ item.created_by|default:'—' }}</td>
+        <td>{{ item.created_at }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5"><div class="empty">Загрузок пока не было.</div></td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Скоринг{% endblock %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <h2>Скоринг транзакций</h2>
+    <p></p>
+  </div>
+</section>
+
+<section class="grid-2">
+  <div class="card">
+    <h3 style="margin-top:0;">Активная модель</h3>
+    {% if latest_artifact %}
+      <p><strong>{{ latest_artifact.model_name }}</strong></p>
+      <p class="muted">{{ latest_artifact.file_path }}</p>
+      <form method="post">
+        {% csrf_token %}
+        <p><label style="display:flex; align-items:center; gap:10px; color:var(--text);"><input type="checkbox" name="rescore_all" checked style="width:auto;"> Пересчитать все транзакции заново</label></p>
+        <div class="actions">
+          <button class="btn" type="submit">Запустить скоринг</button>
+        </div>
+      </form>
+    {% else %}
+      <div class="empty">Сначала обучи модель на странице /ml/train/.</div>
+    {% endif %}
+  </div>
+
+  <div class="card alt">
+    <h3 style="margin-top:0;">Важно</h3>
+    <p><strong></strong></p>
+    <div class="chips">
+      <span class="chip">RISK_LOW_THRESHOLD</span>
+      <span class="chip">RISK_MEDIUM_THRESHOLD</span>
+      <span class="chip">RISK_HIGH_THRESHOLD</span>
+    </div>
+  </div>
+</section>
+
+<section class="card" style="margin-top:16px;">
+  <h3 style="margin-top:0;">Итог последнего запуска</h3>
+  {% if result %}
+    <div class="chips">
+      <span class="chip">scored rows: {{ result.scored_rows }}</span>
+      <span class="chip">alerts created: {{ result.alerts_created }}</span>
+      <span class="chip">alerts updated: {{ result.alerts_updated }}</span>
+      <span class="chip">cases created: {{ result.cases_created }}</span>
+      <span class="chip">cases updated: {{ result.cases_updated }}</span>
+    </div>
+  {% else %}
+    <div class="empty">После запуска скоринга здесь появится сводка по обновлённым объектам.</div>
+  {% endif %}
+</section>
+{% endblock %}

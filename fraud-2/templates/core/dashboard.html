@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="page-head" style="margin-bottom:0;">
+    <div>
+      <h2>Антифрод-панель</h2>
+      <p>
+      </p>
+      <div class="chips">
+        <span class="chip">low ≥ {{ thresholds.low }}</span>
+        <span class="chip">medium ≥ {{ thresholds.medium }}</span>
+        <span class="chip">high ≥ {{ thresholds.high }}</span>
+      </div>
+    </div>
+    <div class="actions">
+      <a class="btn" href="/transactions/import/">Импортировать данные</a>
+      <a class="btn btn-secondary" href="/ml/train/">Обучить модель</a>
+      <a class="btn btn-secondary" href="/ml/score/">Запустить скоринг</a>
+    </div>
+  </div>
+</section>
+
+<section class="grid">
+  <div class="card stat-card">
+    <div class="label">Всего транзакций</div>
+    <div class="value">{{ stats.transactions_total }}</div>
+    <div class="hint">Все записи в базе</div>
+  </div>
+
+  <div class="card stat-card">
+    <div class="label">Скоринг выполнен</div>
+    <div class="value">{{ stats.transactions_scored }}</div>
+    <div class="hint">Со значением fraud_probability</div>
+  </div>
+
+  <div class="card stat-card">
+    <div class="label">Открытые алерты</div>
+    <div class="value">{{ stats.alerts_open }}</div>
+    <div class="hint">open + reviewing</div>
+  </div>
+
+  <div class="card stat-card">
+    <div class="label">Открытые кейсы</div>
+    <div class="value">{{ stats.cases_open }}</div>
+    <div class="hint">open + investigating</div>
+  </div>
+
+  <div class="card stat-card">
+    <div class="label">Средняя вероятность</div>
+    <div class="value">
+      {% if stats.avg_probability is not None %}
+        {{ stats.avg_probability|floatformat:4 }}
+      {% else %}
+        —
+      {% endif %}
+    </div>
+    <div class="hint">По scored транзакциям</div>
+  </div>
+
+  <div class="card stat-card">
+    <div class="label">Пакетов импорта</div>
+    <div class="value">{{ stats.uploads_total }}</div>
+    <div class="hint">История загрузок</div>
+  </div>
+</section>
+
+<section class="grid-2" style="margin-top:16px;">
+  <div class="card">
+    <div class="page-head">
+      <div>
+        <h2 style="font-size:22px;">Распределение риска</h2>
+        <p></p>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card alt">
+        <div class="label">High</div>
+        <div class="value" style="font-size:26px;">{{ risk_breakdown.high }}</div>
+        <span class="badge high">high</span>
+      </div>
+      <div class="card alt">
+        <div class="label">Medium</div>
+        <div class="value" style="font-size:26px;">{{ risk_breakdown.medium }}</div>
+        <span class="badge medium">medium</span>
+      </div>
+      <div class="card alt">
+        <div class="label">Low</div>
+        <div class="value" style="font-size:26px;">{{ risk_breakdown.low }}</div>
+        <span class="badge low">low</span>
+      </div>
+      <div class="card alt">
+        <div class="label">Clear</div>
+        <div class="value" style="font-size:26px;">{{ risk_breakdown.clear }}</div>
+        <span class="badge clear">clear</span>
+      </div>
+      <div class="card alt">
+        <div class="label">Unscored</div>
+        <div class="value" style="font-size:26px;">{{ risk_breakdown.unscored }}</div>
+        <span class="badge unscored">unscored</span>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <canvas id="riskChart" height="120"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="page-head">
+      <div>
+        <h2 style="font-size:22px;">Активная модель</h2>
+        <p> </p>
+      </div>
+    </div>
+
+    {% if latest_artifact %}
+      <p><strong>{{ latest_artifact.model_name }}</strong></p>
+      <p class="muted">{{ latest_artifact.file_path }}</p>
+    {% else %}
+      <div class="empty">Активной модели ещё нет. Сначала перейди на страницу обучения.</div>
+    {% endif %}
+
+    {% if latest_run %}
+      <div class="chips">
+        <span class="chip">run: {{ latest_run.status }}</span>
+        <span class="chip">best: {{ latest_run.best_model_name|default:'—' }}</span>
+        <span class="chip">metric: {{ latest_run.selection_metric|default:'—' }}</span>
+      </div>
+    {% endif %}
+
+    <div style="margin-top:16px;">
+      <canvas id="alertChart" height="120"></canvas>
+    </div>
+  </div>
+</section>
+
+<section class="grid-2" style="margin-top:16px;">
+  <div class="card">
+    <div class="split">
+      <div>
+        <h2 style="font-size:22px; margin:0;">Транзакции по дням</h2>
+        <p class="muted" style="margin:6px 0 0;">Агрегированная динамика по дате.</p>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <canvas id="txChart" height="120"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="split">
+      <div>
+        <h2 style="font-size:22px; margin:0;">Типы операций</h2>
+        <p class="muted" style="margin:6px 0 0;">Распределение transaction type.</p>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <canvas id="operationChart" height="120"></canvas>
+    </div>
+  </div>
+</section>
+
+<section class="grid-2" style="margin-top:16px;">
+  <div class="card">
+    <div class="split">
+      <h2 style="font-size:22px; margin:0;">Последние алерты</h2>
+      <a class="btn btn-secondary" href="/transactions/alerts/">Все алерты</a>
+    </div>
+    <div class="table-wrap" style="margin-top:10px;">
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Tx</th>
+          <th>Severity</th>
+          <th>Status</th>
+          <th>Дата</th>
+        </tr>
+        {% for item in recent_alerts %}
+        <tr>
+          <td>{{ item.id }}</td>
+          <td>{{ item.transaction_id }}</td>
+          <td><span class="badge {{ item.severity }}">{{ item.severity }}</span></td>
+          <td><span class="badge {{ item.status }}">{{ item.status }}</span></td>
+          <td>{{ item.created_at|date:"d.m.Y H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5"><div class="empty">Алертов пока нет</div></td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="split">
+      <h2 style="font-size:22px; margin:0;">Последние кейсы</h2>
+      <a class="btn btn-secondary" href="/transactions/cases/">Все кейсы</a>
+    </div>
+    <div class="table-wrap" style="margin-top:10px;">
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Tx</th>
+          <th>Priority</th>
+          <th>Status</th>
+          <th>Дата</th>
+        </tr>
+        {% for item in recent_cases %}
+        <tr>
+          <td>{{ item.id }}</td>
+          <td>{{ item.transaction_id }}</td>
+          <td><span class="badge {{ item.priority }}">{{ item.priority }}</span></td>
+          <td><span class="badge {{ item.status }}">{{ item.status }}</span></td>
+          <td>{{ item.created_at|date:"d.m.Y H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5"><div class="empty">Кейсов пока нет</div></td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="card" style="margin-top:16px;">
+  <div class="split">
+    <div>
+      <h2 style="font-size:22px; margin:0;">История метрик</h2>
+      <p class="muted" style="margin:6px 0 0;">Сравнение моделей после последних запусков train.</p>
+    </div>
+    <a class="btn btn-secondary" href="/ml/train/">К странице обучения</a>
+  </div>
+  <div class="table-wrap" style="margin-top:12px;">
+    <table>
+      <tr>
+        <th>Model</th>
+        <th>Precision</th>
+        <th>Recall</th>
+        <th>F1</th>
+        <th>ROC-AUC</th>
+        <th>Train</th>
+        <th>Test</th>
+        <th>Created</th>
+      </tr>
+      {% for item in recent_metrics %}
+      <tr>
+        <td>{{ item.model_name }}</td>
+        <td>{{ item.precision|default:'—' }}</td>
+        <td>{{ item.recall|default:'—' }}</td>
+        <td>{{ item.f1|default:'—' }}</td>
+        <td>{{ item.roc_auc|default:'—' }}</td>
+        <td>{{ item.train_rows }}</td>
+        <td>{{ item.test_rows }}</td>
+        <td>{{ item.created_at|date:"d.m.Y H:i" }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8"><div class="empty">Метрики пока не появились. Сначала обучи модель.</div></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</section>
+
+{{ risk_chart|json_script:"risk-chart-data" }}
+{{ tx_chart|json_script:"tx-chart-data" }}
+{{ operation_chart|json_script:"operation-chart-data" }}
+{{ alert_chart|json_script:"alert-chart-data" }}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const riskData = JSON.parse(document.getElementById('risk-chart-data').textContent);
+  const txData = JSON.parse(document.getElementById('tx-chart-data').textContent);
+  const operationData = JSON.parse(document.getElementById('operation-chart-data').textContent);
+  const alertData = JSON.parse(document.getElementById('alert-chart-data').textContent);
+
+  const hasValues = (arr) => Array.isArray(arr) && arr.some(v => Number(v) > 0);
+
+  if (document.getElementById('riskChart') && hasValues(riskData.values)) {
+    new Chart(document.getElementById('riskChart'), {
+      type: 'doughnut',
+      data: {
+        labels: riskData.labels,
+        datasets: [{
+          data: riskData.values,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' }
+        }
+      }
+    });
+  }
+
+  if (document.getElementById('txChart') && txData.labels.length) {
+    new Chart(document.getElementById('txChart'), {
+      type: 'line',
+      data: {
+        labels: txData.labels,
+        datasets: [{
+          label: 'Transactions',
+          data: txData.values,
+          tension: 0.25,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  if (document.getElementById('operationChart') && operationData.labels.length) {
+    new Chart(document.getElementById('operationChart'), {
+      type: 'bar',
+      data: {
+        labels: operationData.labels,
+        datasets: [{
+          label: 'Count',
+          data: operationData.values,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        indexAxis: 'y',
+        scales: {
+          x: { beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  if (document.getElementById('alertChart') && alertData.labels.length) {
+    new Chart(document.getElementById('alertChart'), {
+      type: 'bar',
+      data: {
+        labels: alertData.labels,
+        datasets: [{
+          label: 'Alerts',
+          data: alertData.values,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

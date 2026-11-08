@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Fraud Control Center{% endblock %}</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-soft: #111827;
+      --panel: #ffffff;
+      --panel-alt: #f8fafc;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --success: #16a34a;
+      --warn: #f59e0b;
+      --danger: #dc2626;
+      --high-bg: #fee2e2;
+      --high-tx: #991b1b;
+      --medium-bg: #fef3c7;
+      --medium-tx: #92400e;
+      --low-bg: #dcfce7;
+      --low-tx: #166534;
+      --clear-bg: #e2e8f0;
+      --clear-tx: #334155;
+      --unscored-bg: #dbeafe;
+      --unscored-tx: #1d4ed8;
+      --shadow: 0 14px 30px rgba(15, 23, 42, .08);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(37,99,235,.10), transparent 26%),
+        linear-gradient(180deg, #f8fbff 0%, #f3f6fb 100%);
+      min-height: 100vh;
+    }
+    a { color: inherit; }
+    .shell { max-width: 1320px; margin: 0 auto; padding: 20px; }
+    .topbar {
+      background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+      color: white;
+      border-radius: 24px;
+      padding: 22px 24px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .brand h1 { margin: 0; font-size: 28px; }
+    .brand p { margin: 8px 0 0; opacity: .82; max-width: 680px; line-height: 1.45; }
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+    .nav a, .nav button {
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.16);
+      color: white;
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .nav a:hover, .nav button:hover { background: rgba(255,255,255,.16); }
+    .username {
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.14);
+      font-size: 14px;
+    }
+    .content { margin-top: 20px; }
+    .hero {
+      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(255,255,255,.94));
+      border: 1px solid rgba(226,232,240,.9);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+    .hero h2 { margin: 0 0 10px; font-size: 30px; }
+    .hero p { margin: 0; color: var(--muted); line-height: 1.55; max-width: 860px; }
+    .page-head { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; flex-wrap:wrap; margin-bottom:14px; }
+    .page-head h2 { margin:0; font-size:28px; }
+    .page-head p { margin:6px 0 0; color:var(--muted); }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; }
+    .grid-2 { display:grid; grid-template-columns: 1.2fr .8fr; gap:16px; }
+    .grid-3 { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:16px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .card.alt { background: var(--panel-alt); }
+    .stat-card { position: relative; overflow: hidden; }
+    .stat-card .label { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+    .stat-card .value { font-size: 30px; font-weight: 700; }
+    .stat-card .hint { margin-top: 8px; color: var(--muted); font-size: 13px; }
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      width: 110px; height: 110px;
+      border-radius: 50%;
+      right: -30px; top: -30px;
+      background: rgba(37,99,235,.08);
+    }
+    .btn, button.btn {
+      appearance: none;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--primary);
+      color: white;
+      padding: 11px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .btn:hover, button.btn:hover { background: var(--primary-dark); }
+    .btn-secondary {
+      background: white;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    .btn-secondary:hover { background: #f8fafc; }
+    .btn-danger { background: var(--danger); }
+    .messages { margin-bottom: 18px; display:grid; gap:10px; }
+    .message {
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: white;
+      box-shadow: var(--shadow);
+    }
+    .message.success { border-color: rgba(22,163,74,.25); background:#ecfdf3; }
+    .message.error { border-color: rgba(220,38,38,.25); background:#fff1f2; }
+    .message.warning { border-color: rgba(245,158,11,.25); background:#fffbeb; }
+    .muted { color: var(--muted); }
+    .chips { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    .chip { font-size:13px; padding:7px 10px; border-radius:999px; background:#eef2ff; color:#3730a3; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      overflow: hidden;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid #edf2f7;
+      vertical-align: top;
+    }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    tr:hover td { background: #fafcff; }
+    .table-wrap { overflow-x:auto; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+    .badge.high { background: var(--high-bg); color: var(--high-tx); }
+    .badge.medium { background: var(--medium-bg); color: var(--medium-tx); }
+    .badge.low { background: var(--low-bg); color: var(--low-tx); }
+    .badge.clear { background: var(--clear-bg); color: var(--clear-tx); }
+    .badge.unscored { background: var(--unscored-bg); color: var(--unscored-tx); }
+    .badge.open, .badge.reviewing, .badge.investigating, .badge.closed { background:#eef2ff; color:#1e3a8a; }
+    form.inline { display:inline; }
+    form.filters {
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      align-items:end;
+    }
+    label { display:block; font-size:13px; color: var(--muted); margin-bottom: 6px; }
+    input[type="text"], input[type="password"], input[type="file"], select {
+      width: 100%;
+      border: 1px solid #d9e3f1;
+      background: white;
+      padding: 11px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+    }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .split { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+    .pagination { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+    .pagination a, .pagination span {
+      padding: 10px 14px;
+      border-radius: 12px;
+      background:white;
+      border:1px solid var(--line);
+      text-decoration:none;
+      color:var(--text);
+    }
+    pre.command {
+      margin: 0;
+      white-space: pre-wrap;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 16px;
+      padding: 14px 16px;
+      overflow-x: auto;
+    }
+    .empty {
+      padding: 22px;
+      border-radius: 16px;
+      background: #f8fafc;
+      color: var(--muted);
+      border: 1px dashed #cbd5e1;
+      text-align: center;
+    }
+    @media (max-width: 980px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .hero h2 { font-size: 24px; }
+      .topbar { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <h1>Fraud Control Center</h1>
+        <p></p>
+      </div>
+      <nav class="nav">
+  {% if request.user.is_authenticated %}
+    <a href="/">Главная</a>
+
+    {% if perms.transactions.can_import_transactions %}
+      <a href="/transactions/import/">Импорт</a>
+    {% endif %}
+
+    {% if perms.transactions.view_transaction %}
+      <a href="/transactions/">Транзакции</a>
+    {% endif %}
+
+    {% if perms.transactions.view_alert %}
+      <a href="/transactions/alerts/">Алерты</a>
+    {% endif %}
+
+    {% if perms.transactions.view_case %}
+      <a href="/transactions/cases/">Кейсы</a>
+    {% endif %}
+
+    {% if perms.ml.can_run_training %}
+      <a href="/ml/train/">Обучение</a>
+    {% endif %}
+
+    {% if perms.ml.can_run_scoring %}
+      <a href="/ml/score/">Скоринг</a>
+    {% endif %}
+
+    {% if request.user.is_staff %}
+      <a href="/admin/">Admin</a>
+    {% endif %}
+
+    <span class="username">{{ request.user.username }}</span>
+    <form method="post" action="/accounts/logout/" class="inline">
+      {% csrf_token %}
+      <button type="submit">Выйти</button>
+    </form>
+  {% else %}
+    <a href="/accounts/login/">Войти</a>
+  {% endif %}
+</nav>
+    </header>
+
+    <main class="content">
+      {% if messages %}
+        <div class="messages">
+          {% for message in messages %}
+            <div class="message {{ message.tags|default:'success' }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
